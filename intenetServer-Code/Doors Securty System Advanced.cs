@@ -8,10 +8,7 @@ void Main()
 { 
  
     sdtp_Main(ref security,"DB_DoorsSecurity"); 
-    _<IMyTextPanel>("MyDisplay2").WritePublicText(_<IMyLaserAntenna>("LaserAntenna").DetailInfo);
-   
- 
-    _<IMyTimerBlock>("mytime","Start"); 
+       _<IMyTimerBlock>("mytime","Start"); 
 } 
 
 
