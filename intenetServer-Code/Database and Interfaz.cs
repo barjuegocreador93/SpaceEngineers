@@ -3,6 +3,65 @@ void Main()
   
 }
 
+//FILTROS:
+bool Filter_Method_Laser_Antenna (IMyTerminalBlock block)      
+    {      
+    IMyLaserAntenna la = block as IMyLaserAntenna;      
+    return la != null;      
+    }
+//--
+          
+//FUNCIONES BASICAS:         
+//Buscar objeto por nombre y filtro             
+string _s(string name, Func<IMyTerminalBlock, bool> collect = null)
+{
+    List<IMyTerminalBlock> list=new List<IMyTerminalBlock>();
+    GridTerminalSystem.SearchBlocksOfName(name,list,collect);
+    return list[0].CustomName;
+}
+
+
+
+//capturar objeto u objetos y/o que realicen una accion de una clase T  de una clase T ejemplo <IMyDoor> devolviendo el obejto        
+T _<T>(string name, string action="")where T : class          
+{              
+    if(action.Length != 0) 
+     { 
+            string[] actions=action.Split(','); 
+            foreach(string act in actions) 
+                cambiarAccionObjeto(name,act); 
+     } 
+return  capturar_objeto(name) as  T;           
+}	 
+           
+ 
+//hacer que uno o varios grupos de objetos realicen una opcion  de una clase T ejemplo <IMyDoor> sin devolver nada
+void __<T>(string name, string action)where T : class  
+{ 
+        string[] names=name.Split(','); 
+        foreach(string n in names){ 
+        for(int i=1;exist(n+i.ToString());i++) 
+         { 
+                _<T>(n+i.ToString(),action); 
+          }} 
+} 
+//guardar en una lista referenciada; uno o varios grupos de obejtos de una clase T ejemplo <IMyDoor> sin devolver nada       
+void __<T>(string name, ref List<string> blocks)where T : class   
+{  
+        string[] names=name.Split(',');  
+        foreach(string n in names){  
+        for(int i=1;exist(n+i.ToString());i++)  
+         {                  
+                blocks.Add(n+i.ToString());  
+          }}  
+}      
+//pregunta si un objeto existe         
+bool exist(string nombre_objeto)         
+{         
+    if(capturar_objeto(nombre_objeto)==null)         
+    return false;         
+    return true;         
+}         
 
 IMyTerminalBlock capturar_objeto(string _obj)          
 {          
@@ -16,60 +75,9 @@ void cambiarAccionObjeto(string _objeto, string _accion)
 IMyTerminalBlock objeto =capturar_objeto(_objeto);          
 ITerminalAction  accion = objeto.GetActionWithName(_accion);                                                                                                                    
 accion.Apply(objeto);         
-}          
-         
-bool Filter_Method_Laser_Antenna (IMyTerminalBlock block)      
-    {      
-    IMyLaserAntenna la = block as IMyLaserAntenna;      
-    return la != null;      
-    }             
-string _s(string name, Func<IMyTerminalBlock, bool> collect = null)
-{
-    List<IMyTerminalBlock> list=new List<IMyTerminalBlock>();
-    GridTerminalSystem.SearchBlocksOfName(name,list,collect);
-    return list[0].CustomName;
-}         
-         
-T _<T>(string name, string action="")where T : class          
-{              
-    if(action.Length != 0) 
-     { 
-            string[] actions=action.Split(','); 
-            foreach(string act in actions) 
-                cambiarAccionObjeto(name,act); 
-     } 
-return  capturar_objeto(name) as  T;           
-}	 
-           
- 
- 
-void __<T>(string name, string action)where T : class  
-{ 
-        string[] names=name.Split(','); 
-        foreach(string n in names){ 
-        for(int i=1;exist(n+i.ToString());i++) 
-         { 
-                _<T>(n+i.ToString(),action); 
-          }} 
-} 
-      
-void __<T>(string name, ref List<string> blocks)where T : class   
-{  
-        string[] names=name.Split(',');  
-        foreach(string n in names){  
-        for(int i=1;exist(n+i.ToString());i++)  
-         {                  
-                blocks.Add(n+i.ToString());  
-          }}  
-}      
-         
-bool exist(string nombre_objeto)         
-{         
-    if(capturar_objeto(nombre_objeto)==null)         
-    return false;         
-    return true;         
-}         
- 
+}
+
+//permite mostrar un texto en un display, true si en la parte publica ! privada, true para mostrar el mensaje publico 
 void mostrar(string text,string display, bool pub=true, bool show=true) 
 { 
      if(pub) _<IMyTextPanel>(display).WritePublicText(text); 
@@ -77,18 +85,22 @@ void mostrar(string text,string display, bool pub=true, bool show=true)
      if(show)_<IMyTextPanel>(display). ShowPublicTextOnScreen(); 
 } 
  
- 
-int teclado(string keyup,string keydown,string keycheck) 
+//permite saber si un grupo de timer blocks se inician y devuelve un valor 
+int teclado(string keygrup) 
 { 
-  if(_<IMyTimerBlock>(keyup).IsCountingDown) 
-  {cambiarAccionObjeto(keyup,"Stop");return 1; }
-  if(_<IMyTimerBlock>(keydown).IsCountingDown) 
-  {cambiarAccionObjeto(keydown,"Stop");return 2; }
-  if(_<IMyTimerBlock>(keycheck).IsCountingDown) 
-  {cambiarAccionObjeto(keycheck,"Stop");return 3; }  
+	List<string> keys=new List<string>();
+	__<IMyTimerBlock>(keygrup,ref keys);
+	for(int i=0;i<keys.Count;i++)
+	{
+	if(_<IMyTimerBlock>(keys[i]).IsCountingDown) 
+  	{_<IMyTimerBlock>(keys[i],"Stop");return i+1; }	
+	}
   return 0;       
-} 
-    
+}
+
+//OBJETOS:
+
+//Obejto de base de datos    
 class database     
 {     
     	public List<string> filas;    
@@ -204,6 +216,7 @@ class database
   
 }     
    
+//Objeto de menu
 class menu  
 {  
 	private int cursorPosition;  
@@ -281,7 +294,8 @@ class menu
       }  
         
 }   
-  
+
+//Obejto de inetrfaz  
 class interfaz  
 {  
       public List<menu> ifcs;       
@@ -349,4 +363,8 @@ class interfaz
                 ready=false;              
             }
         }  
-}  
+}
+
+
+
+
