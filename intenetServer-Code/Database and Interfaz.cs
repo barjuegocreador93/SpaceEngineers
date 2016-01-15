@@ -213,6 +213,15 @@ class database
                 string[] nu={"null"};             
               return nu;           
         }
+     public string[] FilaForColumna(int Indexfila)
+        {
+             if(Indexfila>=0&&Indexfila<filas.Count)
+             {
+                return filas[Indexfila].Split('|');   
+             } 
+                string[] nu={"null"};             
+              return nu;           
+        }
   
 }     
    
