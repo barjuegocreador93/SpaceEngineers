@@ -1,4 +1,4 @@
-//
+ //
 //Server nodo=new Server( string TimerBlocksGrups,string MainDispaly,bool SaveUsers=false, string IP="0-", 
 //string DatabaseIPs="DBplaces",string DatabaseUsers="DBusers",  string DatabaseRam="DBram" )
 
@@ -427,14 +427,14 @@ void Server_Regist_User(ref database m, ref int i,ref Server nodo)
             
             _<IMyTextPanel>(nodo.Components[3]).WritePublicText(user.Save());
           m.filas.RemoveAt(i);
-          m.filas.Add("msg#"+IPPersonalDatabaseInbox+"|"+nodo.IP.Replace('-','.')+"|"+ 
+          m.filas.Add("msg#"+IPmade+"|"+nodo.IP.Replace('-','.')+"|"+ 
                 IdUser+"|Welcome! You are registed on this server!");
           _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());    
          }else
           {
             m.filas.RemoveAt(i); 
-            m.filas.Add("msg#"+IPPersonalDatabaseInbox+"|"+nodo.IP.Replace('-','.')+"|"+
-                IPPersonalDatabaseInbox+"|Sorry! This user was register");  
+            m.filas.Add("msg#"+IPmade+"|"+nodo.IP.Replace('-','.')+"|"+
+                IPmade+"|Sorry! This user was register");  
           _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());    
           }  
        
@@ -447,11 +447,24 @@ void Server_Regist_User(ref database m, ref int i,ref Server nodo)
       
         
 }
-void Sever_Sign(ref database m, ref int i)
+bool Server_SendMSG(string url, ref database p, int i, ref database m)
 {
-}
-void Server_UserMessage(ref database m, ref int i)
-{
+            if(!Server_PortsEquals(url,ref p))  
+            {  
+                string ipUrl=Server_WayMsg(url,ref p);  
+                if(ipUrl!="null"){  
+                string antenna=_s(ipUrl,Filter_Method_Laser_Antenna);  
+                _<IMyTerminalBlock>(antenna).SetCustomName(ipUrl+m.filas[i]);  
+                antenna=_s(ipUrl,Filter_Method_Laser_Antenna); 
+                _<IMyLaserAntenna>(antenna,"OnOff_Off");  
+                _<IMyLaserAntenna>(antenna,"OnOff_On");                 
+                }  
+                m.filas.RemoveAt(i);  
+                _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
+                return true;  
+            }
+    return false;
+
 }
 
 bool Server_PortsEquals(string IP, ref database p)
@@ -476,7 +489,7 @@ string Server_WayMsg(string url, ref database p)
             if(Server_PortsEquals(result,ref p))return result;
         }
         return "null";  
-}
+}   
 
 void ServerMain(ref Server nodo)
 {
@@ -534,22 +547,12 @@ void ServerMain(ref Server nodo)
         string url=m.GetDataString(i,0).Split('#')[1].Replace('.','-');
         switch(typeRq)
         {
-            case "regist":if(nodo.SaveUsersHere&&Server_PortsEquals(url,ref p))Server_Regist_User(ref m, ref i,ref nodo);
+            case "regist":
+            if(nodo.SaveUsersHere&&Server_PortsEquals(url,ref p))Server_Regist_User(ref m, ref i,ref nodo);
+            else Server_SendMSG(url, ref p,i,ref m);
             break;  
-            case "msg":
-            if(!Server_PortsEquals(url,ref p)) 
-            { 
-                string ipUrl=Server_WayMsg(url,ref p); 
-                if(ipUrl!="null"){ 
-                string antenna=_s(ipUrl,Filter_Method_Laser_Antenna); 
-                _<IMyTerminalBlock>(antenna).SetCustomName(ipUrl+m.filas[i]); 
-                antenna=_s(ipUrl,Filter_Method_Laser_Antenna);
-                _<IMyLaserAntenna>(antenna,"OnOff_Off"); 
-                _<IMyLaserAntenna>(antenna,"OnOff_On");                
-                } 
-                m.filas.RemoveAt(i); 
-                _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save()); 
-            }else i++;break;
+            case "msg": if(!Server_SendMSG(url, ref p,i,ref m))i++;
+            break;
             default: i++;break;
             
         }
@@ -558,4 +561,3 @@ void ServerMain(ref Server nodo)
     _<IMyTimerBlock>(nodo.Components[0]+" 4","Start");
     
 }
- 
