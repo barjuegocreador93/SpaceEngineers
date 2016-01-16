@@ -551,7 +551,36 @@ void ServerMain(ref Server nodo)
             if(nodo.SaveUsersHere&&Server_PortsEquals(url,ref p))Server_Regist_User(ref m, ref i,ref nodo);
             else Server_SendMSG(url, ref p,i,ref m);
             break;  
-            case "msg": if(!Server_SendMSG(url, ref p,i,ref m))i++;
+            case "msg": if(!Server_SendMSG(url, ref p,i,ref m))
+                {
+                    if(p.existEnColumnas(0,m.GetDataString(i,2).Replace('.','-')))
+                    {
+                        string[] msg= m.GetDataString(i,3).Split(',');
+                        if(msg.Length==2){
+                        switch(msg[0])
+                        {
+                             case "Quest":
+                                    if(msg[1]=="saveUser")
+                                    {
+                                        string ans;                               
+                                        if(nodo.SaveUsersHere)ans="true";
+                                        else ans="false";
+                                        if(m.GetDataString(i,1).Split(',').Length==2)
+                                        {
+                                            m.filas.Add("msg#"+m.GetDataString(i,1).Split(',')[1]+"|"+
+                                            p.GetDataString(0,0).Replace('-','.')+"|"+m.GetDataString(i,1).Split(',')[0]+"|saveUser,"
+                                            +ans+"|"+m.GetDataString(i,4));
+                                            m.filas.RemoveAt(i);
+                                            _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
+                                        }else i++;
+                                    }
+                                break;
+                                default: i++;break;
+                        }
+                    }else i++;
+                    } else            
+                    i++;
+                }
             break;
             default: i++;break;
             
@@ -561,3 +590,4 @@ void ServerMain(ref Server nodo)
     _<IMyTimerBlock>(nodo.Components[0]+" 4","Start");
     
 }
+ 
