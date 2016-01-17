@@ -1,4 +1,4 @@
-SystemOperative alfa=new SystemOperative();
+    SystemOperative alfa=new SystemOperative();
 sdtp  security = new sdtp();
 
  
@@ -576,9 +576,12 @@ class SystemOperative
     public string ip;
     public bool ready=true;
     public string serial;
-    public List<string> externals=new List<string>();    
+    public List<string> externals=new List<string>();  
     public string DBram;
-    public List<string> QuestRegister= new List<string>();
+
+    public List<string> QuestRegister= new List<string>{"idUser","name","password", 
+     "IPSend","DBIdUser","quest","madeIP","device","serial"}; 
+
     public SystemOperative(string nameTimerBlockGrup="key",string nameOfDivece="Akm-0",
     string nameDisplayChat="DChat1x2", string nameDisplayInput="Input", string nameDBcache="DBcache",
     string nameDBram="DBram", string nameDBConfig="DBConfig")
@@ -596,13 +599,13 @@ class SystemOperative
 //0
         string menus="Main Menu "+NameOfDivece+"|Welcome to divece#Please Select one: |Register;1|Sign in;5|Config;7 \n";
 //1
-        menus+="Register->ID|write your ID in the public title:|Next;2|Back;0 \n";
+        menus+="Register->ID|write your ID in the public title:|Next;11|Back;0 \n";
 //2
-        menus+="Register->Password|write your Password in the public title:|Next;3|Back;1 \n";
+        menus+="Register->Password|write your Password in the public title:|Next;3|Back;11 \n";
 //3
-        menus+="Register->DBChat|write your DBchat name in the public title:|Next;4|Back;2 \n";
+        menus+="Register->DBChatIP|write your DBchat IP name in the public title:|Next;12|Back;2 \n";
 //4
-        menus+="Register->MSG|ServerMessage:|Finish;0 \n";
+        menus+="Register->MSG|ServerMessage:|Finish;0|Try Again;1|Config;7 \n";
 //5
         menus+="Sign in-ID|write your ID in the public title:|Next;6|Back;0 \n";
 //6
@@ -612,9 +615,14 @@ class SystemOperative
 //8
         menus+="Config->Conective|Write the IP how can save users: |Start;9|Back;7\n";
 //9 
-        menus+="Config->Conective->msg|Message: |Ok;7|Try Again;8|Main Menu;0\n";
+        menus+="Config->Conective->msg|Message: |Ok;7|Try Again;8|Chanege IP;10|Main Menu;0\n";
 //10 
-        menus+="Config->Local IP|Write a name of Laser Antenna(IP): |Ok;7|Main Menu;0";
+        menus+="Config->Local IP|Write a name of Laser Antenna(IP): |Ok;7|Main Menu;0\n";
+//11  
+        menus+="Register->Name|Write a your name: |Next;2|Back;1\n";
+//12   
+        menus+="Register->DBchat name|Write a your DBchat name: |Next;4|Back;11";
+
             
         return menus;   
     }
@@ -625,82 +633,23 @@ string randomstr()
         int num= a.Next(0,10);
         return num.ToString();
  }   
-void SO_Config(ref SystemOperative alfa, ref List<int> moves)
-{  
-        alfa.Config= new database(_<IMyTextPanel>(alfa.externals[4]).GetPublicText());
-        alfa.ip=alfa.Config.FilaForColumna(0,"IP")[0]!="null"?alfa.Config.FilaForColumna(0,"IP")[1]:"null";
-        if(moves[0]==3)
-        {
-            
-            if(moves[1]==1&&moves[2]==8)
-            {
-                    string serial;
-                    do
-                    serial=randomstr()+randomstr()+randomstr()+randomstr();
-                    while(serial==alfa.serial);
-                    alfa.serial=serial;
-                    string ip=_<IMyTextPanel>(alfa.externals[2]).GetPublicTitle().Replace('-','.');
-                    if(alfa.ip!="null")
-                    alfa.Config.filas.Add("IPServerUser|"+ip);
-                    else alfa.Config.SetColumn(alfa.Config.IndexFilaOfColumna(0,"IPServerUser"),1,ip);
-                    if(alfa.Config.FilaForColumna(0,"IP")[0]!="null"){
-                    alfa.ready=true;
-                    database ram=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());                    
-                    ram.filas.Add("msg#"+ip+"|"+alfa.NameOfDivece.Replace('-','.')+","+
-                    alfa.Config.FilaForColumna(0,"IP")[1].Replace('-','.')+"|"+ip+"|Quest,saveUser"+"|"+serial);
-                    _<IMyTextPanel>(alfa.DBram).WritePublicText(ram.Save());}else alfa.shell.ifact=10;
-                    
-            }
-            if(moves[1]==1&&moves[2]==10)
-            {
-                string ip=_<IMyTextPanel>(alfa.externals[2]).GetPublicTitle().Replace('-','.');
-                alfa.ip=ip;
-                if(alfa.Config.FilaForColumna(0,"IP")[0]=="null") 
-                    alfa.Config.filas.Add("IP|"+ip);
-                else alfa.Config.SetColumn(alfa.Config.IndexFilaOfColumna(0,"IP"),1,ip);
-                _<IMyTextPanel>(alfa.externals[4]).WritePublicText(alfa.Config.Save());
-            }
-        }
-        if(moves[2]==9)
-        {
-            if(alfa.ready)alfa.shell.SetAditionalText(9,"Plese wait a moment\nWe try to connectiv to:\n ");
-            database ram=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());
-            for(int i=0;i<ram.filas.Count&&alfa.ready;)
-            {
-                if(ram.GetDataString(i,2)==alfa.NameOfDivece.Replace('-','.') && ram.GetDataString(i,4)
-                ==alfa.serial)
-                {
-                    string[] msg=ram.GetDataString(i,3).Split(',');
-                    switch(msg[0])
-                    {
-                        case "saveUser":
-                            if(msg[1]=="true")
-                            {
-                                alfa.shell.SetAditionalText(9,"Conetive Succses!");
-                                string ip=_<IMyTextPanel>(alfa.externals[2]).GetPublicTitle().Replace('-','.'); 
-                                if(alfa.ip!="null") 
-                                alfa.Config.filas.Add("IPServerUser|"+ip); 
-                                else alfa.Config.SetColumn(alfa.Config.IndexFilaOfColumna(0,"IPServerUser"),1,ip);  
-                                _<IMyTextPanel>(alfa.externals[4]).WritePublicText(alfa.Config.Save());
-                                alfa.ready=false;                                
-                            }else
-                            {
-                                alfa.shell.SetAditionalText(9,"The server can't keep a data! plese choese other"); 
-                                alfa.Config.filas.RemoveAt(alfa.Config.IndexFilaOfColumna(0,"IPServerUser"));
-                                _<IMyTextPanel>(alfa.externals[4]).WritePublicText(alfa.Config.Save());
-                            }
-                            ram.filas.RemoveAt(i);
-                            _<IMyTextPanel>(alfa.DBram).WritePublicText(ram.Save());
-                        break;                       
-                        default: i++; 
-                        break;
-                    }
-                }
-                else i++;
-            }
-        
-    }
+
+void SO_print(int index,string text, ref SystemOperative alfa)
+{
+   alfa.shell.SetAditionalText(index,text); 
+   mostrar(alfa.shell.ifcs[alfa.shell.GetIfact()].mostrar(),alfa.externals[2]);      
 }
+string SO_input(ref SystemOperative alfa)
+{
+    return _<IMyTextPanel>(alfa.externals[2]).GetPublicTitle();
+}
+void SO_WriteOnDBram(string text,ref SystemOperative alfa)
+{
+    database r=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());
+      r.filas.Add(text);
+    _<IMyTextPanel>(alfa.DBram).WritePublicText(r.Save());
+}
+
 void SO_main(ref SystemOperative alfa)
 {
     
@@ -708,8 +657,170 @@ void SO_main(ref SystemOperative alfa)
     mostrar(alfa.shell.ifcs[alfa.shell.GetIfact()].mostrar(),alfa.externals[2]); 
     List<int> moves=alfa.shell.run(teclado(alfa.externals[0]));
     SO_Config(ref alfa, ref moves);
+    SO_Regiter(ref alfa,ref moves);
     
 
 
     _<IMyTimerBlock>("time","Start");
+}
+void SO_Regiter(ref SystemOperative alfa, ref List<int> moves)
+{
+    if(moves[0]==3) 
+    {
+            if(moves[1]==1&&moves[2]==0)
+            {
+                if(alfa.Config.FilaForColumna(0,"IP")[0]!="null")alfa.ip=alfa.Config.FilaForColumna(0,"IP")[1];
+                if(alfa.Config.FilaForColumna(0,"IPServerUser")[0]!="null")alfa.ready=false;
+                if(alfa.ip=="null"){alfa.shell.ifact=10;return;}
+                if(alfa.ready){alfa.shell.ifact=8;return;}               
+            }
+            //0-0-regist#0.|
+            if(moves[1]==1&&moves[2]==1)
+            {
+                alfa.QuestRegister[0]=SO_input(ref alfa).Replace('-','.');
+            }
+            if(moves[1]==1&&moves[2]==11) 
+            { 
+                alfa.QuestRegister[1]=(SO_input(ref alfa)).Replace('-','.'); 
+            }
+            if(moves[1]==1&&moves[2]==2)  
+            {  
+                alfa.QuestRegister[2]=(SO_input(ref alfa)).Replace('-','.');  
+            }
+            if(moves[1]==1&&moves[2]==3)   
+            {   
+                alfa.QuestRegister[3]=SO_input(ref alfa).Replace('-','.');   
+            }
+            if(moves[1]==1&&moves[2]==12)    
+            {    
+                alfa.QuestRegister[4]=SO_input(ref alfa).Replace('-','.');
+                alfa.QuestRegister[6]=alfa.ip.Replace('-','.');
+                alfa.QuestRegister[7]=alfa.NameOfDivece.Replace('-','.');
+                 string serial;  
+                    do  
+                    serial=randomstr()+randomstr()+randomstr()+randomstr();  
+                    while(serial==alfa.serial);  
+                    alfa.QuestRegister[8]=alfa.serial=serial;
+                string msg="regist#"+alfa.Config.FilaForColumna(0,"IPServerUser")[1].Replace('-','.')+"|";
+                for(int i=0;i<9;i++)
+                {
+                    msg+=alfa.QuestRegister[i];
+                    if(i!=8)msg+="|";
+                }
+                database r=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText()); 
+                r.filas.Add(msg); 
+                _<IMyTextPanel>(alfa.DBram).WritePublicText(r.Save());             
+                alfa.ready=true;                
+            }
+            
+    }
+    if(moves[2]==4)  
+        {  
+            if(alfa.ready)SO_print(4,"Plese wait a moment\nWe try to connectiv to the server\nbut may be your ip it's not exist:\n ",ref alfa);  
+            database ram=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());  
+            for(int i=0;i<ram.filas.Count&&alfa.ready;)  
+            {  
+                if(ram.GetDataString(i,2)==alfa.NameOfDivece.Replace('-','.') && ram.GetDataString(i,4)  
+                ==alfa.serial)  
+                {  
+                    string[] msg=ram.GetDataString(i,3).Split(',');  
+                    switch(msg[0])  
+                    {  
+                        case "regist":  
+                            if(msg[1]=="true")   
+                            {  
+                                SO_print(4,"Your regiter is allredy acept! Welcome", ref alfa);                                 
+                                alfa.ready=false;                                  
+                            }else  
+                            {  
+                                SO_print(4,"Your register was taken sorry for that\nbut try with other ID!",ref alfa);   
+                                alfa.ready=false;
+                            }  
+                            ram.filas.RemoveAt(i);  
+                            _<IMyTextPanel>(alfa.DBram).WritePublicText(ram.Save());  
+                        break;                         
+                        default: i++;   
+                        break;  
+                    }  
+                }  
+                else i++;  
+            }  
+          
+    } 
+}
+
+
+void SO_Config(ref SystemOperative alfa, ref List<int> moves) 
+{   
+        alfa.Config= new database(_<IMyTextPanel>(alfa.externals[4]).GetPublicText()); 
+        alfa.ip=alfa.Config.FilaForColumna(0,"IP")[0]!="null"?alfa.Config.FilaForColumna(0,"IP")[1]:"null"; 
+        if(moves[0]==3) 
+        { 
+            if(moves[1]==1&&moves[2]==7&&alfa.Config.FilaForColumna(0,"IP")[0]=="null")alfa.shell.ifact=10; 
+            if(moves[1]==1&&moves[2]==8) 
+            { 
+                    if(alfa.Config.FilaForColumna(0,"IP")[0]!="null"){ 
+                    alfa.ready=true; 
+                    string serial; 
+                    do 
+                    serial=randomstr()+randomstr()+randomstr()+randomstr(); 
+                    while(serial==alfa.serial); 
+                    alfa.serial=serial; 
+                    string ip=SO_input(ref alfa).Replace('-','.');                  
+                    database ram=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());                     
+                    ram.filas.Add("msg#"+ip+"|"+alfa.NameOfDivece.Replace('-','.')+","+ 
+                    alfa.Config.FilaForColumna(0,"IP")[1].Replace('-','.')+"|"+ip+"|Quest,saveUser"+"|"+serial); 
+                    _<IMyTextPanel>(alfa.DBram).WritePublicText(ram.Save());}else alfa.shell.ifact=10; 
+                     
+            } 
+            if(moves[1]==1&&moves[2]==10) 
+            { 
+                string ip=SO_input(ref alfa).Replace('-','.'); 
+                alfa.ip=ip; 
+                if(alfa.Config.FilaForColumna(0,"IP")[0]=="null")  
+                    alfa.Config.filas.Add("IP|"+ip); 
+                else alfa.Config.SetColumn(alfa.Config.IndexFilaOfColumna(0,"IP"),1,ip); 
+                _<IMyTextPanel>(alfa.externals[4]).WritePublicText(alfa.Config.Save()); 
+            } 
+        } 
+        if(moves[2]==9) 
+        { 
+            if(alfa.ready)SO_print(9,"Plese wait a moment\nWe try to connectiv to the server\nbut may be your ip it's not exist:\n ",ref alfa); 
+            database ram=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText()); 
+            for(int i=0;i<ram.filas.Count&&alfa.ready;) 
+            { 
+                if(ram.GetDataString(i,2)==alfa.NameOfDivece.Replace('-','.') && ram.GetDataString(i,4) 
+                ==alfa.serial) 
+                { 
+                    string[] msg=ram.GetDataString(i,3).Split(','); 
+                    switch(msg[0]) 
+                    { 
+                        case "saveUser": 
+                            if(msg[1]=="true")  
+                            { 
+                                SO_print(9,"Conetive Succses!", ref alfa); 
+                                string ip=SO_input(ref alfa).Replace('-','.');  
+                                if(alfa.Config.FilaForColumna(0,"IPServerUser")[0]=="null")  
+                                alfa.Config.filas.Add("IPServerUser|"+ip);  
+                                else alfa.Config.SetColumn(alfa.Config.IndexFilaOfColumna(0,"IPServerUser"),1,ip);   
+                                _<IMyTextPanel>(alfa.externals[4]).WritePublicText(alfa.Config.Save()); 
+                                alfa.ready=false;                                 
+                            }else 
+                            { 
+                                SO_print(9,"The server can't keep a data! plese choese other",ref alfa);  
+                                alfa.Config.filas.RemoveAt(alfa.Config.IndexFilaOfColumna(0,"IPServerUser")); 
+                                _<IMyTextPanel>(alfa.externals[4]).WritePublicText(alfa.Config.Save()); 
+                                alfa.ready=false; 
+                            } 
+                            ram.filas.RemoveAt(i); 
+                            _<IMyTextPanel>(alfa.DBram).WritePublicText(ram.Save()); 
+                        break;                        
+                        default: i++;  
+                        break; 
+                    } 
+                } 
+                else i++; 
+            } 
+         
+    } 
 }
