@@ -4,7 +4,7 @@
 
 
 
-Server nodo=new Server("Timer Block nodo 0","Display nodo 0",false);
+Server nodo=new Server("Timer Block nodo 0","Display nodo 0",true);
 
 
  
