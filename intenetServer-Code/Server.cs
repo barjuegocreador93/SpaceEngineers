@@ -4,7 +4,7 @@
 
 
 
-Server nodo=new Server("Timer Block nodo 0","Display nodo 0",true);
+Server nodo=new Server("Timer Block nodo 0","Display nodo 0",false);
 
 
  
@@ -414,6 +414,8 @@ void Server_Regist_User(ref database m, ref int i,ref Server nodo)
    string NamePersonalDatabaseInbox=m.GetDataString(i,5);
    string status=m.GetDataString(i,6);
    string IPmade=m.GetDataString(i,7);
+   string Device=m.GetDataString(i,8);
+   string serial=m.GetDataString(i,9);
     
    
     if(status=="quest")
@@ -423,18 +425,18 @@ void Server_Regist_User(ref database m, ref int i,ref Server nodo)
          {
             status="logOut";
             user.filas.Add(IdUser+"|"+name+"|"+password+"|"+IPPersonalDatabaseInbox+"|"+NamePersonalDatabaseInbox
-            +"|"+status+"|"+IPmade);
+            +"|"+status+"|"+IPmade+"|"+Device);
             
             _<IMyTextPanel>(nodo.Components[3]).WritePublicText(user.Save());
           m.filas.RemoveAt(i);
           m.filas.Add("msg#"+IPmade+"|"+nodo.IP.Replace('-','.')+"|"+ 
-                IdUser+"|Welcome! You are registed on this server!");
+                Device+"|regist,true|"+serial);
           _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());    
          }else
           {
             m.filas.RemoveAt(i); 
             m.filas.Add("msg#"+IPmade+"|"+nodo.IP.Replace('-','.')+"|"+
-                IPmade+"|Sorry! This user was register");  
+                Device+"|regist,false|"+serial);  
           _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());    
           }  
        
@@ -590,4 +592,5 @@ void ServerMain(ref Server nodo)
     _<IMyTimerBlock>(nodo.Components[0]+" 4","Start");
     
 }
+ 
  
