@@ -1,4 +1,4 @@
-//
+ //
 //Server nodo=new Server( string TimerBlocksGrups,string MainDispaly,bool SaveUsers=false, string IP="0-", 
 //string DatabaseIPs="DBplaces",string DatabaseUsers="DBusers",  string DatabaseRam="DBram" )
 
@@ -462,7 +462,7 @@ void ServerMain(ref Server nodo)
                         nodo.msg.Add(""); 
                     }else 
                     { 
-                       place.filas.Add(nodo.IP+"|"+nodo.IP+"0-"); 
+                       place.filas.Add(nodo.IP); 
                         _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save()); 
                         nodo.msg.Add("");                        
                     } 
