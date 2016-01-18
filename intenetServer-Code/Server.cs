@@ -1,10 +1,10 @@
- //
+//
 //Server nodo=new Server( string TimerBlocksGrups,string MainDispaly,bool SaveUsers=false, string IP="0-", 
 //string DatabaseIPs="DBplaces",string DatabaseUsers="DBusers",  string DatabaseRam="DBram" )
 
 
 
-Server nodo=new Server("Timer Block nodo 0","Display nodo 0",true);
+Server nodo=new Server("Timer Block nodo 0","Display nodo 0",false,"0-4-0-");
 
 
  
@@ -38,7 +38,12 @@ bool Filter_Method_Laser_Antenna (IMyTerminalBlock block)
     {      
     IMyLaserAntenna la = block as IMyLaserAntenna;      
     return la != null;      
-    }             
+    }  
+bool Filter_Method_Timer_Block (IMyTerminalBlock block)       
+    {       
+    IMyTimerBlock la = block as IMyTimerBlock;       
+    return la != null;       
+    }                        
 string _s(string name, Func<IMyTerminalBlock, bool> collect = null)
 {
     List<IMyTerminalBlock> list=new List<IMyTerminalBlock>();
@@ -198,6 +203,19 @@ class database
 			      }    
 		      return text;    
 	   } 
+    public bool existEnFila(int fila, string var)
+    {
+        if(fila>=0&&fila<filas.Count)
+        {
+            string[] Fila=filas[fila].Split('|');
+            foreach(string d in Fila)
+                {
+                    if(d==var)return true;
+                }
+            
+        }
+        return false;
+    }
     public bool existEnColumnas(int columna, string var)
     {
         for(int i=0;i<filas.Count;i++)
@@ -217,6 +235,16 @@ class database
                 string[] nu={"null"};             
               return nu;           
         }
+    public int IndexFilaOfColumna(int columna, string var) 
+      {   
+            for(int i=0;i<filas.Count;i++)   
+             {   
+                if(GetDataString(i,columna)==var)   
+                    return i;       
+             }                               
+             return -1;              
+        } 
+       
   
 }     
    
@@ -301,7 +329,7 @@ class menu
 class interfaz  
 {  
       public List<menu> ifcs;       
-      private int ifact;
+      public int ifact;
       private bool ready=true;  
       public interfaz()  
       {  
@@ -364,6 +392,12 @@ class interfaz
                 }
                 ready=false;              
             }
+        }
+        public void Clear(int ifacts)
+        {
+            ready=true;
+            ifcs.Clear();
+            ifact=ifacts;
         }  
 }  
 
@@ -372,7 +406,12 @@ class Server
     public List<string> Components=new List<string>();
     public interfaz id = new interfaz();
     public string IP;
-    public List<string> msg=new    List<string>(); 
+    public List<string> msg=new    List<string>();
+    public database ifaz=new database(
+        "Main Menu|Use this panel to create a new #IP: |Create Point;1|Multi ip Point;2\n"+
+        "Add->ip|Are you sure to create a new point?|Yes;0|No;0"
+    ); 
+    public List<string> mp=new List<string>{"",""};
     public bool ready=true;
     public bool SaveUsersHere=false;
     public Server(string timerblocks, string textpanel,bool SaveUser=false, string ip="0-",
@@ -397,13 +436,162 @@ class Server
     }    
     
 }
-string ServerMenu()
-{
-    string menus="Main Menu|Use this panel to create a new #IP: |Create Point;1 \n";   
-    menus+="Register-id|Are you sure to create a new point?|Yes;0|No;0"; 
-           
-    return menus; 
-}
+void ServerMain(ref Server nodo) 
+{ 
+    nodo.SupliteMSGAntenna(_<IMyTextPanel>(nodo.Components[2]).GetPublicText()); 
+    nodo.id.makeUsingDataBase(nodo.ifaz.Save());  
+    mostrar(nodo.id.ifcs[nodo.id.GetIfact()].mostrar(),nodo.Components[1]);      
+    List<int> moves=nodo.id.run(teclado(nodo.Components[0]+" 1",nodo.Components[0]+" 2",nodo.Components[0] 
+    +" 3")); 
+    if(moves[0]==3) 
+    { 
+             database place=new database(_<IMyTextPanel>(nodo.Components[2]).GetPublicText());
+            if(moves[2]==1&&moves[1]==1) 
+            { 
+                    
+                    if(place.filas.Count!=0) 
+                    { 
+                        string[] ip=place.GetDataString(place.filas.Count-1,0).Split('-'); 
+                        int i=int.Parse(ip[ip.Length-2])+1; 
+                        string newIp=""; 
+                        for(int x=0;x<ip.Length-2;x++) 
+                                newIp+=ip[x]+"-"; 
+                        newIp+=i+"-";                         
+                        place.filas.Add(newIp); 
+                        _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save()); 
+                        nodo.msg.Add(""); 
+                    }else 
+                    { 
+                       place.filas.Add(nodo.IP+"|"+nodo.IP+"0-"); 
+                        _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save()); 
+                        nodo.msg.Add("");                        
+                    } 
+            } 
+            if(moves[1]==2&&moves[2]==0) 
+            { 
+                    nodo.id.Clear(2); 
+                    
+                    
+                    string ips=""; 
+                    for(int i=0;i<place.filas.Count;i++) 
+                    { 
+                        ips+=place.GetDataString(i,0)+";2|"; 
+                    } 
+                    ips+="Back;0"; 
+                    
+                    if(!nodo.ifaz.existEnColumnas(0,"Add->Multi ip Point"))
+                    nodo.ifaz.filas.Add("Add->Multi ip Point|Select one of this:|"+ips);
+                    else  nodo.ifaz.Setfila(nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point"),
+                    "Add->Multi ip Point|Select one of this:|"+ips);                   
+                    nodo.id.makeUsingDataBase(nodo.ifaz.Save());
+                    nodo.id.ifact=nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point"); 
+            }
+             
+            for(int i=0;i<place.filas.Count;i++)
+                {
+                    if(moves[1]==i+1&&moves[2]==nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point"))
+                    {
+                        nodo.id.Clear(0);
+                        string ips="";  
+                    for(int j=0;j<place.filas.Count;j++)  
+                    {  
+                       if(i!=j) ips+=place.GetDataString(j,0)+";0|";  
+                    }  
+                    ips+="Back;"+nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point").ToString();
+                    if(!nodo.ifaz.existEnColumnas(0,"Add->Multi ip Point->to")) 
+                    nodo.ifaz.filas.Add("Add->Multi ip Point->to|Select one of this:|"+ips); 
+                    else  nodo.ifaz.Setfila(nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point->to"), 
+                    "Add->Multi ip Point->to|Select one of this:|"+ips);                    
+                    nodo.id.makeUsingDataBase(nodo.ifaz.Save()); 
+                    nodo.id.ifact=nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point->to");
+                        nodo.mp[0]=nodo.ifaz.GetDataString(nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point"),2+i)
+                        .Split(';')[0];
+                        i=place.filas.Count;
+                    }
+                }
+            for(int i=0;i<place.filas.Count-1;i++)
+            {
+                   if(moves[1]==i+1&&moves[2]==nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point->to"))
+                    {
+                        nodo.mp[1]=nodo.ifaz.GetDataString(nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point->to"),2+i) 
+                        .Split(';')[0];
+                        int j=place.IndexFilaOfColumna(0,nodo.mp[0]);
+                       if(!place.existEnFila(j,nodo.mp[1])) place.filas[j]+="|"+nodo.mp[1];
+                        j=place.IndexFilaOfColumna(0,nodo.mp[1]);
+                       if(!place.existEnFila(j,nodo.mp[0]))place.filas[j]+="|"+nodo.mp[0];
+                         _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save());
+                    } 
+            }
+    } 
+                                    //Save Message in a RAM 
+    database p=new database(_<IMyTextPanel>(nodo.Components[2]).GetPublicText()); 
+    database m=new database(_<IMyTextPanel>(nodo.Components[4]).GetPublicText()); 
+    for(int i=0;i<p.filas.Count;i++) 
+    { 
+        string antenna=_s(p.GetDataString(i,0),Filter_Method_Laser_Antenna); 
+         
+        if(IsConnected(_<IMyLaserAntenna>(antenna))) 
+        { 
+        string antInfo=_<IMyTerminalBlock>(antenna).DetailedInfo; 
+        string[] antenna2=antInfo.Split('\n')[2].Remove(0,12).Split('-'); 
+        string message=antenna2[antenna2.Length-1]; 
+        if(nodo.msg[i]!=message){m.filas.Add(message);nodo.msg[i]=message;}     }   
+    } 
+    _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save()); 
+ 
+     
+    for(int i=0;i<m.filas.Count;) 
+    { 
+         
+        string typeRq=m.GetDataString(i,0).Split('#')[0]; 
+        string url=m.GetDataString(i,0).Split('#')[1].Replace('.','-'); 
+        switch(typeRq) 
+        { 
+            case "regist": 
+            if(nodo.SaveUsersHere&&Server_PortsEquals(url,ref p))Server_Regist_User(ref m, ref i,ref nodo); 
+            else Server_SendMSG(url, ref p,i,ref m); 
+            break; 
+            case "sesion":Server_Sesion(url,ref p,ref i,ref m);break;   
+            case "msg": if(!Server_SendMSG(url, ref p,i,ref m)) 
+                { 
+                    if(p.existEnColumnas(0,m.GetDataString(i,2).Replace('.','-'))) 
+                    { 
+                        string[] msg= m.GetDataString(i,3).Split(','); 
+                        if(msg.Length==2){ 
+                        switch(msg[0]) 
+                        { 
+                             case "Quest": 
+                                    if(msg[1]=="saveUser") 
+                                    { 
+                                        string ans;                                
+                                        if(nodo.SaveUsersHere)ans="true"; 
+                                        else ans="false"; 
+                                        if(m.GetDataString(i,1).Split(',').Length==2) 
+                                        { 
+                                            m.filas.Add("msg#"+m.GetDataString(i,1).Split(',')[1]+"|"+ 
+                                            p.GetDataString(0,0).Replace('-','.')+"|"+m.GetDataString(i,1).Split(',')[0]+"|saveUser," 
+                                            +ans+"|"+m.GetDataString(i,4)); 
+                                            m.filas.RemoveAt(i); 
+                                            _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save()); 
+                                        }else i++; 
+                                    } 
+                                break; 
+                                default: i++;break; 
+                        } 
+                    }else i++; 
+                    } else             
+                    i++; 
+                } 
+            break; 
+            default: i++;break; 
+             
+        } 
+         
+    } 
+    _<IMyTimerBlock>(nodo.Components[0]+" 4","Start"); 
+     
+} 
+ 
 
 void Server_Regist_User(ref database m, ref int i,ref Server nodo)
 {
@@ -449,17 +637,89 @@ void Server_Regist_User(ref database m, ref int i,ref Server nodo)
       
         
 }
+void Server_Sesion(string url, ref database p,ref int i, ref database m)
+{
+    if(!Server_SendMSG(url, ref p,i,ref m))
+     {
+           if(nodo.SaveUsersHere&&Server_PortsEquals(url,ref p))
+            {
+               
+               
+                database user=new database(_<IMyTextPanel>(nodo.Components[3]).GetPublicText());
+                if(user.existEnColumnas(0,m.GetDataString(i,2)))
+                {
+                    string status=m.GetDataString(i,1);
+                    switch(status)
+                    {
+                        case "Sign": //Sign | user | password | device | ipDevice | |serial 
+                         if(user.FilaForColumna(0,m.GetDataString(i,2))[2]==m.GetDataString(i,3))
+                            {
+                                int index=user.IndexFilaOfColumna(0,m.GetDataString(i,2));
+                                user.SetColumn(index,5,status);
+                                user.SetColumn(index,6,m.GetDataString(i,5));
+                                user.SetColumn(index,7,m.GetDataString(i,4));
+                                _<IMyTextPanel>(nodo.Components[3]).WritePublicText(user.Save());
+                                m.filas.Add("msg#"+m.GetDataString(i,5).Replace('-','.')+"|"+
+                                p.GetDataString(0,0).Replace('-','.')+"|"+m.GetDataString(i,4)+"|online,true|"+m.GetDataString(i,6));
+                                _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
+                            } else
+                            {
+                                m.filas.Add("msg#"+m.GetDataString(i,5).Replace('-','.')+"|"+ 
+                                p.GetDataString(0,0).Replace('-','.')+"|"+m.GetDataString(i,4)+"|online,false|"+m.GetDataString(i,6)); 
+                                _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
+                            }                           
+                        break;
+                         case "logOut": //logOut | user | password | device | ipDevice | serial  
+                         if(user.FilaForColumna(0,m.GetDataString(i,2))[2]==m.GetDataString(i,3)) 
+                            { 
+                                int index=user.IndexFilaOfColumna(0,m.GetDataString(i,2));
+                                if(user.GetDataString(index,6).Replace('-','.')==m.GetDataString(i,5).Replace('-','.')&&
+                                        user.GetDataString(index,7)==m.GetDataString(i,4)) {
+                                user.SetColumn(index,5,status);                               
+                                _<IMyTextPanel>(nodo.Components[3]).WritePublicText(user.Save());
+                                m.filas.Add("msg#"+m.GetDataString(i,5).Replace('-','.')+"|"+ 
+                                p.GetDataString(0,0).Replace('-','.')+"|"+m.GetDataString(i,4)+"|online,false|"+m.GetDataString(i,6)); 
+                                _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
+                                 }
+                            }                             
+                        break;
+                    }              
+                }
+                
+            } 
+            m.filas.RemoveAt(i); 
+            _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
+     }else i++;
+}
+
+
 bool Server_SendMSG(string url, ref database p, int i, ref database m)
 {
+                
             if(!Server_PortsEquals(url,ref p))  
             {  
-                string ipUrl=Server_WayMsg(url,ref p);  
-                if(ipUrl!="null"){  
+                string ipUrl=Server_WayMsg(url,ref p);                 
+                if(ipUrl!="null"){ 
+                if(_<IMyTimerBlock>(_s(ipUrl,Filter_Method_Timer_Block)).IsCountingDown)
+                {
+                    string same;
+                    bool ok=true;
+                    for(int x=1;x<p.FilaForColumna(0,ipUrl).Length&&ok;x++)
+                    {
+                            same=p.GetDataString(p.IndexFilaOfColumna(0,ipUrl),x);
+                            if(!_<IMyTimerBlock>(_s(same,Filter_Method_Timer_Block)).IsCountingDown)
+                            {ipUrl=same;ok=false;}
+                    }
+                    if(ok)return false;
+                    
+                }
                 string antenna=_s(ipUrl,Filter_Method_Laser_Antenna);  
                 _<IMyTerminalBlock>(antenna).SetCustomName(ipUrl+m.filas[i]);  
                 antenna=_s(ipUrl,Filter_Method_Laser_Antenna); 
                 _<IMyLaserAntenna>(antenna,"OnOff_Off");  
-                _<IMyLaserAntenna>(antenna,"OnOff_On");                 
+                _<IMyLaserAntenna>(antenna,"OnOff_On");
+                _<IMyTimerBlock>(_s(ipUrl,Filter_Method_Timer_Block),"Start"); 
+                
                 }  
                 m.filas.RemoveAt(i);  
                 _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
@@ -493,104 +753,3 @@ string Server_WayMsg(string url, ref database p)
         return "null";  
 }   
 
-void ServerMain(ref Server nodo)
-{
-    nodo.SupliteMSGAntenna(_<IMyTextPanel>(nodo.Components[2]).GetPublicText());
-    nodo.id.makeUsingDataBase(ServerMenu()); 
-    mostrar(nodo.id.ifcs[nodo.id.GetIfact()].mostrar(),nodo.Components[1]);     
-    List<int> moves=nodo.id.run(teclado(nodo.Components[0]+" 1",nodo.Components[0]+" 2",nodo.Components[0]
-    +" 3"));
-    if(moves[0]==3)
-    {
-            if(moves[2]==1&&moves[1]==1)
-            {
-                    database place=new database(_<IMyTextPanel>(nodo.Components[2]).GetPublicText());
-                    if(place.filas.Count!=0)
-                    {
-                        string[] ip=place.GetDataString(place.filas.Count-1,0).Split('-');
-                        int i=int.Parse(ip[ip.Length-2])+1;
-                        string newIp="";
-                        for(int x=0;x<ip.Length-2;x++)
-                                newIp+=ip[x]+"-";
-                        newIp+=i+"-";
-                        newIp+="|"+newIp+"0-";
-                        place.filas.Add(newIp);
-                        _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save());
-                        nodo.msg.Add("");
-                    }else
-                    {
-                       place.filas.Add(nodo.IP+"|"+nodo.IP+"0-");
-                        _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save());
-                        nodo.msg.Add("");                       
-                    }
-            }
-    }
-                                    //Save Message in a RAM
-    database p=new database(_<IMyTextPanel>(nodo.Components[2]).GetPublicText());
-    database m=new database(_<IMyTextPanel>(nodo.Components[4]).GetPublicText());
-    for(int i=0;i<p.filas.Count;i++)
-    {
-        string antenna=_s(p.GetDataString(i,0),Filter_Method_Laser_Antenna);
-        
-        if(IsConnected(_<IMyLaserAntenna>(antenna)))
-        {
-        string antInfo=_<IMyTerminalBlock>(antenna).DetailedInfo;
-        string[] antenna2=antInfo.Split('\n')[2].Remove(0,12).Split('-');
-        string message=antenna2[antenna2.Length-1];
-        if(nodo.msg[i]!=message){m.filas.Add(message);nodo.msg[i]=message;}     }  
-    }
-    _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
-
-    
-    for(int i=0;i<m.filas.Count;)
-    {
-        
-        string typeRq=m.GetDataString(i,0).Split('#')[0];
-        string url=m.GetDataString(i,0).Split('#')[1].Replace('.','-');
-        switch(typeRq)
-        {
-            case "regist":
-            if(nodo.SaveUsersHere&&Server_PortsEquals(url,ref p))Server_Regist_User(ref m, ref i,ref nodo);
-            else Server_SendMSG(url, ref p,i,ref m);
-            break;  
-            case "msg": if(!Server_SendMSG(url, ref p,i,ref m))
-                {
-                    if(p.existEnColumnas(0,m.GetDataString(i,2).Replace('.','-')))
-                    {
-                        string[] msg= m.GetDataString(i,3).Split(',');
-                        if(msg.Length==2){
-                        switch(msg[0])
-                        {
-                             case "Quest":
-                                    if(msg[1]=="saveUser")
-                                    {
-                                        string ans;                               
-                                        if(nodo.SaveUsersHere)ans="true";
-                                        else ans="false";
-                                        if(m.GetDataString(i,1).Split(',').Length==2)
-                                        {
-                                            m.filas.Add("msg#"+m.GetDataString(i,1).Split(',')[1]+"|"+
-                                            p.GetDataString(0,0).Replace('-','.')+"|"+m.GetDataString(i,1).Split(',')[0]+"|saveUser,"
-                                            +ans+"|"+m.GetDataString(i,4));
-                                            m.filas.RemoveAt(i);
-                                            _<IMyTextPanel>(nodo.Components[4]).WritePublicText(m.Save());
-                                        }else i++;
-                                    }
-                                break;
-                                default: i++;break;
-                        }
-                    }else i++;
-                    } else            
-                    i++;
-                }
-            break;
-            default: i++;break;
-            
-        }
-        
-    }
-    _<IMyTimerBlock>(nodo.Components[0]+" 4","Start");
-    
-}
- 
- 
