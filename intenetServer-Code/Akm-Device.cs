@@ -1,4 +1,4 @@
-    SystemOperative alfa=new SystemOperative();
+   SystemOperative alfa=new SystemOperative();
 sdtp  security = new sdtp();
 
  
@@ -398,7 +398,13 @@ class interfaz
                 } 
                 ready=false;               
             } 
-        }   
+        }
+    public void Clear(int ifacts)  
+        {  
+            ready=true;  
+            ifcs.Clear();  
+            ifact=ifacts;  
+        }    
 } 
 
  class sdtp  
@@ -442,7 +448,7 @@ class interfaz
             ready=false;  
         }  
     }  
-  
+     
   
 }  
   
@@ -571,7 +577,7 @@ class SystemOperative
     public interfaz shell = new interfaz();
     public database Config;
     public string NameOfDivece;
-    public bool online; 
+    public bool online=false; 
     public string user; 
     public string ip;
     public bool ready=true;
@@ -581,6 +587,10 @@ class SystemOperative
 
     public List<string> QuestRegister= new List<string>{"idUser","name","password", 
      "IPSend","DBIdUser","quest","madeIP","device","serial"}; 
+    
+    public List<string> QuestSign= new List<string>{"IdUser","password"};
+    
+    public List<string> AddDBmP= new List<string>{"DBname","user"};    
 
     public SystemOperative(string nameTimerBlockGrup="key",string nameOfDivece="Akm-0",
     string nameDisplayChat="DChat1x2", string nameDisplayInput="Input", string nameDBcache="DBcache",
@@ -597,7 +607,8 @@ class SystemOperative
     public string Interfaz()
     {//meves[2]=
 //0
-        string menus="Main Menu "+NameOfDivece+"|Welcome to divece#Please Select one: |Register;1|Sign in;5|Config;7 \n";
+        string menus="Main Menu "+NameOfDivece+"|Welcome to divece#Please Select one: |Register;1"+
+        "|Sign in;5|Add Database Message;14|Config;7 \n";
 //1
         menus+="Register->ID|write your ID in the public title:|Next;11|Back;0 \n";
 //2
@@ -609,7 +620,7 @@ class SystemOperative
 //5
         menus+="Sign in-ID|write your ID in the public title:|Next;6|Back;0 \n";
 //6
-        menus+="Sign in-Pasword|write your Password in the public title:|Next;0|Back;0 \n";
+        menus+="Sign in-Pasword|write your Password in the public title:|Next;13|Back;0 \n";
 //7     
         menus+="Config|Configurations:|Conective;8|Local IP;10|Back;0\n";
 //8
@@ -621,7 +632,15 @@ class SystemOperative
 //11  
         menus+="Register->Name|Write a your name: |Next;2|Back;1\n";
 //12   
-        menus+="Register->DBchat name|Write a your DBchat name: |Next;4|Back;11";
+        menus+="Register->DBchat name|Write a your DBchat name: |Next;4|Back;11\n";
+
+//13    
+        menus+="Sign in->msg|msgServer:|MainMenu;0\n"; 
+//14     
+        menus+="Add Database Message->Name:|Write the name of Database:|Next;15;Back;0\n";  
+//15      
+        menus+="Add Database Message->User:|Write the name of Database:|Next;0|Back;14";   
+
 
             
         return menus;   
@@ -652,17 +671,75 @@ void SO_WriteOnDBram(string text,ref SystemOperative alfa)
 
 void SO_main(ref SystemOperative alfa)
 {
-    
+    SO_Messenger(ref alfa);
     alfa.shell.makeUsingDataBase(alfa.Interfaz()); 
     mostrar(alfa.shell.ifcs[alfa.shell.GetIfact()].mostrar(),alfa.externals[2]); 
     List<int> moves=alfa.shell.run(teclado(alfa.externals[0]));
     SO_Config(ref alfa, ref moves);
     SO_Regiter(ref alfa,ref moves);
-    
-
+    SO_Sesion(ref alfa,ref moves);
+    SO_AddDatabaseMessenger(ref alfa,ref moves);
 
     _<IMyTimerBlock>("time","Start");
 }
+
+void SO_AddDatabaseMessenger(ref SystemOperative alfa, ref List<int> moves)
+{
+    if(moves[0]==3) 
+    {
+        alfa.Config= new database(_<IMyTextPanel>(alfa.externals[4]).GetPublicText());
+         if(moves[1]==3&&moves[2]==0) 
+            { 
+                if(alfa.Config.FilaForColumna(0,"IP")[0]!="null")alfa.ip=alfa.Config.FilaForColumna(0,"IP")[1]; 
+                if(alfa.Config.FilaForColumna(0,"IPServerUser")[0]!="null")alfa.ready=false; 
+                if(alfa.ip=="null"){alfa.shell.ifact=10;return;} 
+                if(alfa.ready){alfa.shell.ifact=8;return;}                
+            } 
+            
+            if(moves[1]==1&&moves[2]==14) 
+            { 
+                alfa.AddDBmP[0]=SO_input(ref alfa).Replace('-','.');
+                if(!exist(alfa.AddDBmP[0]))
+                {
+                    alfa.shell.ifact=14;
+                } 
+            }
+            if(moves[1]==1&&moves[2]==15)  
+            {  
+                alfa.AddDBmP[1]=SO_input(ref alfa).Replace('-','.');
+                if(!alfa.Config.existEnColumnas(0,"DataBaseMessenger"))
+                alfa.Config.filas.Add("DataBaseMessenger|"+alfa.AddDBmP[0]+","+alfa.AddDBmP[1]);
+                else alfa.Config.Setfila(alfa.Config.IndexFilaOfColumna(0,"DataBaseMessenger"),
+                 alfa.Config.filas[alfa.Config.IndexFilaOfColumna(0,"DataBaseMessenger")]+"|"
+                +alfa.AddDBmP[0]+","+alfa.AddDBmP[1]);
+                _<IMyTextPanel>(alfa.externals[4]).WritePublicText(alfa.Config.Save()); 
+            }
+                    
+    }
+}
+void SO_Messenger(ref SystemOperative alfa)
+{
+    alfa.Config= new database(_<IMyTextPanel>(alfa.externals[4]).GetPublicText());
+    for(int i=1;i<alfa.Config.FilaForColumna(0,"DataBaseMessenger").Length;i++)
+    {
+           string db=alfa.Config.GetDataString(alfa.Config.IndexFilaOfColumna(0,"DataBaseMessenger"),i).Split(',')[0];
+           string u=alfa.Config.GetDataString(alfa.Config.IndexFilaOfColumna(0,"DataBaseMessenger"),i).Split(',')[1];
+           database r=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());
+           for(int x=0;x<r.filas.Count;)
+           {
+                if(r.GetDataString(x,2)==db||r.GetDataString(x,2)==u)
+                {
+                    string ms=r.filas[x];
+                    database dbs=new database(_<IMyTextPanel>(db).GetPublicText());
+                    dbs.filas.Add(ms);
+                    _<IMyTextPanel>(db).WritePublicText(dbs.Save());
+                    r.filas.RemoveAt(x);
+                    _<IMyTextPanel>(alfa.DBram).WritePublicText(r.Save());
+                }else x++;
+           }
+    }
+}
+
 void SO_Regiter(ref SystemOperative alfa, ref List<int> moves)
 {
     if(moves[0]==3) 
@@ -748,7 +825,65 @@ void SO_Regiter(ref SystemOperative alfa, ref List<int> moves)
           
     } 
 }
-
+void SO_Sesion(ref SystemOperative alfa, ref List<int> moves)
+{
+     if(moves[0]==3) 
+        {
+            if(moves[1]==2&&moves[2]==0)
+            {
+                if(alfa.Config.FilaForColumna(0,"IP")[0]!="null")alfa.ip=alfa.Config.FilaForColumna(0,"IP")[1]; 
+                if(alfa.Config.FilaForColumna(0,"IPServerUser")[0]!="null")alfa.ready=false; 
+                if(alfa.ip=="null"){alfa.shell.ifact=10;return;} 
+                if(alfa.ready){alfa.shell.ifact=8;return;} 
+            }
+            if(moves[1]==1&&moves[2]==5) 
+            { 
+                alfa.QuestSign[0]=SO_input(ref alfa).Replace('-','.'); 
+            }
+            if(moves[1]==1&&moves[2]==6)  
+            {  
+                string serial;   
+                    do   
+                    serial=randomstr()+randomstr()+randomstr()+randomstr();   
+                    while(serial==alfa.serial);   
+                alfa.serial=serial;                
+                alfa.QuestSign[1]=SO_input(ref alfa).Replace('-','.');
+                string msg="sesion#"+alfa.Config.FilaForColumna(0,"IPServerUser")[1]+"|Sign|"+alfa.QuestSign[0]+"|"+
+                alfa.QuestSign[1]+"|"+ alfa.NameOfDivece.Replace('-','.')+"|"+
+                alfa.Config.FilaForColumna(0,"IP")[1].Replace('-','.')+"|"+serial;
+                database r=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());  
+                r.filas.Add(msg);  
+                _<IMyTextPanel>(alfa.DBram).WritePublicText(r.Save());
+                alfa.ready=true;
+            }
+        }
+        if(moves[2]==13)
+        {
+            if(alfa.ready)SO_print(13,"Wating a Server request...",ref alfa);
+            database ram=new database(_<IMyTextPanel>(alfa.DBram).GetPublicText());   
+            for(int i=0;i<ram.filas.Count&&alfa.ready;)
+            {
+                if(ram.GetDataString(i,2)==alfa.NameOfDivece.Replace('-','.')&&
+                    ram.GetDataString(i,1)==alfa.Config.FilaForColumna(0,"IPServerUser")[1].Replace('-','.'))
+                    {
+                           
+                            alfa.shell.ifact=0;
+                            if(ram.GetDataString(i,3).Split(',')[0]=="online")
+                            if(ram.GetDataString(i,3).Split(',')[1]=="true"&&alfa.serial==ram.GetDataString(i,4))
+                            {
+                                 SO_print(13,"You are Sign on this Server!",ref alfa);
+                                 alfa.online=true;
+                                alfa.ready=false;
+                                ram.filas.RemoveAt(i);
+                                _<IMyTextPanel>(alfa.DBram).WritePublicText(ram.Save());
+                                return; 
+                            }else i++;                   
+                                                        
+                    }else i++;
+            }
+            
+        }
+}
 
 void SO_Config(ref SystemOperative alfa, ref List<int> moves) 
 {   
