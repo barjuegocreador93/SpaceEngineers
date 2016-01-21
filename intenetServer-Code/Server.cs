@@ -4,7 +4,7 @@
 
 
 
-Server nodo=new Server("tnodo","Display nodo 0",false,"0-4-0-");
+Server nodo=new Server("tnodo","Display nodo 0",true,"0-");
 
 
  
