@@ -1,15 +1,16 @@
- //
+//
 //Server nodo=new Server( string TimerBlocksGrups,string MainDispaly,bool SaveUsers=false, string IP="0-", 
 //string DatabaseIPs="DBplaces",string DatabaseUsers="DBusers",  string DatabaseRam="DBram" )
 
 
 
-Server nodo=new Server("Timer Block nodo 0","Display nodo 0",false,"0-4-0-");
+Server nodo=new Server("tnodo","Display nodo 0",false,"0-4-0-");
 
 
  
 void Main()      
-{        
+{
+    nodo.autoIp=true;       
     ServerMain(ref nodo);  
 }    
 
@@ -48,7 +49,9 @@ string _s(string name, Func<IMyTerminalBlock, bool> collect = null)
 {
     List<IMyTerminalBlock> list=new List<IMyTerminalBlock>();
     GridTerminalSystem.SearchBlocksOfName(name,list,collect);
+    if(list.Count!=0)
     return list[0].CustomName;
+    return "";
 }         
          
 T _<T>(string name, string action="")where T : class          
@@ -410,7 +413,8 @@ class Server
     public database ifaz=new database(
         "Main Menu|Use this panel to create a new #IP: |Create Point;1|Multi ip Point;2\n"+
         "Add->ip|Are you sure to create a new point?|Yes;0|No;0"
-    ); 
+    );
+    public bool autoIp=true; 
     public List<string> mp=new List<string>{"",""};
     public bool ready=true;
     public bool SaveUsersHere=false;
@@ -436,8 +440,38 @@ class Server
     }    
     
 }
+void AutoIP(ref Server nodo)
+{
+     string la=_s("Laser Antenna",Filter_Method_Laser_Antenna);
+    string tb=_s("Timer Block",Filter_Method_Timer_Block);
+    if(la!=""&&tb!=""){
+         database place=new database(_<IMyTextPanel>(nodo.Components[2]).GetPublicText());
+         if(place.filas.Count!=0)  
+                    {  
+                        string[] ip=place.GetDataString(place.filas.Count-1,0).Split('-');  
+                        int i=int.Parse(ip[ip.Length-2])+1;  
+                        string newIp="";  
+                        for(int x=0;x<ip.Length-2;x++)  
+                                newIp+=ip[x]+"-";  
+                        newIp+=i+"-";
+                        _<IMyTerminalBlock>(la).SetCustomName(newIp);
+                        _<IMyTerminalBlock>(tb).SetCustomName(newIp);                          
+                        place.filas.Add(newIp);  
+                        _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save());  
+                        nodo.msg.Add("");  
+                    }else  
+                    { 
+                        _<IMyTerminalBlock>(la).SetCustomName(nodo.IP); 
+                        _<IMyTerminalBlock>(tb).SetCustomName(nodo.IP); 
+                       place.filas.Add(nodo.IP);  
+                        _<IMyTextPanel>(nodo.Components[2]).WritePublicText(place.Save());  
+                        nodo.msg.Add("");                         
+                    } 
+    }
+}
 void ServerMain(ref Server nodo) 
 { 
+    if(nodo.autoIp)AutoIP(ref nodo);
     nodo.SupliteMSGAntenna(_<IMyTextPanel>(nodo.Components[2]).GetPublicText()); 
     nodo.id.makeUsingDataBase(nodo.ifaz.Save());  
     mostrar(nodo.id.ifcs[nodo.id.GetIfact()].mostrar(),nodo.Components[1]);      
