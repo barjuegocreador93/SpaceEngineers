@@ -4,7 +4,8 @@ void Main()
 {
   mostrar(a.PrintActualMenu(),a.LCDname);
   a.run(teclado(a.NameKeys[0],a.NameKeys[1],a.NameKeys[2]));
-  a.dbUser=new database(_<IMyTextPanel>("dbUser").GetPublicText());//
+  //dbUSer:
+  a.dbUser=new database(_<IMyTextPanel>("dbUser").GetPublicText());
   
 }
 
