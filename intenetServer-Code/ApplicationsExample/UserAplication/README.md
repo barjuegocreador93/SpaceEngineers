@@ -1,4 +1,6 @@
-# Blocks:
+# User aplication in game
+
+## Blocks:
 1. repeat [Timer Block]
 2. Timer Block 1 [Timer Block]
 3. Timer Block 2 [Timer Block]
