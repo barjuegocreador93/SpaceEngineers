@@ -562,8 +562,13 @@ void ServerMain(ref Server nodo)
                         nodo.id.Clear(0);  
                         string ips="";    
                     for(int j=0;j<place.filas.Count;j++)    
-                    {    
-                       if(i!=j) ips+=place.GetDataString(j,0)+";0|";    
+                    {
+                        for(int x=0;x<place.FilaForColumna(0,place.GetDataString(i,0)).Length;x++)
+                        {
+                            if(place.FilaForColumna(0,place.GetDataString(i,0))[x]==place.GetDataString(j,0))
+                                j++;
+                        }    
+                         ips+=place.GetDataString(j,0)+";0|";
                     }    
                     ips+="Back;"+nodo.ifaz.IndexFilaOfColumna(0,"Add->Multi ip Point").ToString();  
                     nodo.ifaz.AddUniquedFila(0,"Add->Multi ip Point->to","Select one of this:|"+ips);                      
@@ -826,5 +831,5 @@ string Server_WayMsg(string url, ref database p)
             if(Server_PortsEquals(result,ref p))return result;  
         }  
         return "null";    
-} 
-
+}     
+    
