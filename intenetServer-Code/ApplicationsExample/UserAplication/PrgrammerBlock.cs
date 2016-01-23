@@ -4,8 +4,50 @@ void Main()
 {
   mostrar(a.PrintActualMenu(),a.LCDname);
   a.run(teclado(a.NameKeys[0],a.NameKeys[1],a.NameKeys[2]));
-  //dbUSer:
+  //dbUSer:../intenetServer-Code/ApplicationsExample/UserAplication/dbUser[TextPanel].xml
   a.dbUser=new database(_<IMyTextPanel>("dbUser").GetPublicText());
+  //Create a events:
+  if(a.keyPress==3)
+  {
+  	if(a.IsActualMenuOnOption("Main Menu",1))//Register menu
+  	{
+  		a.newMenuToGo("Register->ID","Write your ID in public title\nof this text panel",
+  		"Next;Register->ID|Back;Main Menu");
+  	}
+  	if(a.IsActualMenuOnOption("Register->ID",1))//Register->ID menu and validation dbUser:
+  	{
+  		a.qregist[0]=input(ref a);//GetPublicTitle of our TextPanel App and save
+  		if(!a.dbUser.existEnColumnas(0,a.qregist[0]))//If not exist the ID on dbUser
+  		a.newMenuToGo("Register->Name","Write your name in public title\nof this text panel",
+  		"Next;0|Back;Register->ID");
+  		else a.newMenuToGo("Register->ID","the ID "+a.qregist[0]+
+  		"\nexist, try with other.\nWrite your ID in public title\nof this text panel",
+  		"Next;Register->ID|Back;Main Menu");
+  		 
+  	}
+  	if(a.IsActualMenuOnOption("Register->Name",1))//Register->Name menu
+  	{
+  		a.qregist[1]=input(ref a);//GetPublicTitle of our TextPanel App and save 
+  		a.newMenuToGo("Register->Password","Write your password in public title\nof this text panel",
+  		"Next;0|Back;Register->Name");
+  	}
+  	if(a.IsActualMenuOnOption("Register->Password",1))//Register->Password menu
+  	{
+  		a.qregist[2]=input(ref a);//GetPublicTitle of our TextPanel App and save 
+  		a.newMenuToGo("Register->Age","Write your age in public title\nof this text panel",
+  		"Next;0|Back;Register->Password");
+  	}
+  	if(a.IsActualMenuOnOption("Register->Age",1))//Register->Age menu
+  	{
+  		a.qregist[3]=input(ref a);//GetPublicTitle of our TextPanel App and save
+  		a.dbUser.AddUniquedFila(0,a.qregist[0],a.qregist[1]+"|"+a.qregist[2]+"|"+a.qregist[3]+"|");
+  		_<IMyTextPanel>("dbUser").WritePublicText(a.dbUser.Save());
+  		a.newMenuToGo("Register->Msg","Your user is create!",
+  		"Finish;Main Menu");
+  	}
+  	
+  }
+  _<IMyTimerBlock>("repeat","Start");
   
 }
 
